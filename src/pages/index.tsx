@@ -45,6 +45,19 @@ export default function Home() {
     return formattedCNPJ;
   };
 
+  //Formata os valores financeiros
+  const formattedCurrency = (value: number) => {
+    return value.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
+  //Formata as datas
+  function formatDate(dateString: string): string {
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+}
   //Enviar o formulário
   const clickHandler = async () => {
     //Redefine os dados
@@ -92,13 +105,6 @@ export default function Home() {
     0
   );
 
-  //Formata os valores financeiros
-  const formattedCurrency = (value: number) => {
-    return value.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-  };
 
   //Faz a grid usando o Ant com um maximo de duas colunas
   const rows = [];
@@ -160,12 +166,12 @@ export default function Home() {
                     style={{ height: "100%" }}
                   >
                     <Card.Grid style={{ width: "50%" }} hoverable={false}>
-                      Vigência inicial &nbsp;
-                      {item.dataVigenciaInicio}
+                      Vigência inicial: &nbsp;
+                      {formatDate(item.dataVigenciaInicio)}
                     </Card.Grid>
                     <Card.Grid style={{ width: "50%" }} hoverable={false}>
-                      Vigência Final &nbsp;
-                      {item.dataVigenciaFim}
+                      Vigência Final: &nbsp;
+                      {formatDate(item.dataVigenciaFim)}
                     </Card.Grid>
                     <Card.Grid
                       style={{
