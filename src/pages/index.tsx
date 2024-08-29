@@ -1,118 +1,192 @@
-import Image from "next/image";
-import { Inter } from "next/font/google";
-
-const inter = Inter({ subsets: ["latin"] });
+import { Alert, Button, Card, Col, DatePicker, Input, Row, Spin } from "antd";
+import dayjs from "dayjs";
+import { useState } from "react";
+const { RangePicker } = DatePicker;
 
 export default function Home() {
+  //States dos inputs
+  const [cnpj, setCnpj] = useState<string>("");
+  const [dateRange, setDateRange] = useState<(dayjs.Dayjs | null)[]>([]);
+
+  //State da resposta da API
+  const [data, setData] = useState<any>([]);
+
+  //States utilitarios
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  //Função para formatar o CNPJ ao digitar
+  const formatCNPJ = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+
+    let formattedCNPJ = numericValue;
+    if (numericValue.length > 2) {
+      formattedCNPJ = numericValue.replace(/^(\d{2})(\d)/, "$1.$2");
+    }
+    if (numericValue.length > 5) {
+      formattedCNPJ = formattedCNPJ.replace(
+        /^(\d{2})\.(\d{3})(\d)/,
+        "$1.$2.$3"
+      );
+    }
+    if (numericValue.length > 8) {
+      formattedCNPJ = formattedCNPJ.replace(
+        /^(\d{2})\.(\d{3})\.(\d{3})(\d)/,
+        "$1.$2.$3/$4"
+      );
+    }
+    if (numericValue.length > 12) {
+      formattedCNPJ = formattedCNPJ.replace(
+        /^(\d{2})\.(\d{3})\.(\d{3})\/(\d{4})(\d)/,
+        "$1.$2.$3/$4-$5"
+      );
+    }
+
+    return formattedCNPJ;
+  };
+
+  //Enviar o formulário
+  const clickHandler = async () => {
+    //Redefine os dados
+    setLoading(true);
+    setData([]);
+    setError(null);
+
+    //Formata os dados para a API
+    const formattedRange = dateRange.map((date) =>
+      date ? dayjs(date).format("YYYYMMDD") : null
+    );
+
+    const cleanCnpj = (formattedCNPJ: string) => {
+      return formattedCNPJ.replace(/\D/g, "");
+    };
+    const [startDate, endDate] = formattedRange;
+    const pageNumber = 1;
+
+    try {
+      //Faz a busca na API
+      const res = await fetch(
+        `/api/busca?&dataInicial=${startDate}&dataFinal=${endDate}&cnpjOrgao=${cleanCnpj(
+          cnpj
+        )}&pagina=${pageNumber}`
+      );
+
+      //Handling dos erros
+      if (!res.ok) {
+        const errorData = await res.json();
+        const errorMessage = errorData.error || "Failed to fetch data";
+        throw new Error(errorMessage);
+      }
+
+      const result = await res.json();
+      setData(result.data);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //Faz a grid usando o Ant com um maximo de duas colunas
+  const rows = [];
+  for (let i = 0; i < data.length; i += 2) {
+    rows.push(data.slice(i, i + 2));
+    console.log(rows);
+  }
   return (
-    <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
-    >
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/pages/index.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <main className="flex overflow-hidden">
+      <div className="md:w-[30%] min-w-[25rem] md:px-4 py-10 h-[100vh] md:border-r-2 flex flex-col justify-around items-center">
+        <div className="h-fit flex flex-col gap-2">
+          <h1 className=" font-semibold text-center">
+            Procure as informações pelo CNPJ
+          </h1>
+          <Input
+            placeholder="Insira aqui o CNPJ da empresa"
+            value={cnpj}
+            onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
+            maxLength={18}
+          ></Input>
+          <RangePicker
+            format={"DD/MM/YYYY"}
+            placeholder={["Data Inicial", "Data Final"]}
+            onChange={(dates) => setDateRange(dates || [])}
+          ></RangePicker>
+          <Button onClick={clickHandler}>Buscar</Button>
+        </div>
+        <div>
+          {data.length > 0 && (
+            <Card title={data[0].unidadeOrgao.nomeUnidade}>
+              <Card.Grid style={{ width: "50%" }} hoverable={false}>
+                {data[0].unidadeOrgao.ufNome}
+              </Card.Grid>
+              <Card.Grid style={{ width: "50%" }} hoverable={false}>
+                {data[0].unidadeOrgao.municipioNome}
+              </Card.Grid>
+              <Card.Grid style={{ width: "50%" }} hoverable={false}>
+                Código da Unidade: {data[0].unidadeOrgao.codigoUnidade}
+              </Card.Grid>
+              <Card.Grid style={{ width: "50%" }} hoverable={false}>
+                Código do IBGE: {data[0].unidadeOrgao.codigoIbge}
+              </Card.Grid>
+              <Card.Grid style={{ width: "60%" }} hoverable={false}>
+                Valor Total: R${data.reduce((total:number, item:any) => total + item.valorInicial, 0)}
+
+              </Card.Grid>
+            </Card>
+          )}
         </div>
       </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700/10 after:dark:from-sky-900 after:dark:via-[#0141ff]/40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Discover and deploy boilerplate example Next.js&nbsp;projects.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      {data.length > 0 && (
+        <div className="flex flex-col flex-shrink w-full h-[100vh] justify-around items-around gap-y-2 p-2 overflow-auto">
+          {rows.map((row, rowIndex) => (
+            <Row key={rowIndex} gutter={6}>
+              {row.map((item: any, index: number) => (
+                <Col span={12} key={index}>
+                  <Card
+                    title={item.nomeRazaoSocialFornecedor}
+                    style={{ height: "100%" }}
+                  >
+                    <Card.Grid style={{ width: "50%" }} hoverable={false}>
+                      Vigência inicial &nbsp;
+                      {item.dataVigenciaInicio}
+                    </Card.Grid>
+                    <Card.Grid style={{ width: "50%" }} hoverable={false}>
+                      Vigência Final &nbsp;
+                      {item.dataVigenciaFim}
+                    </Card.Grid>
+                    <Card.Grid
+                      style={{
+                        width: "100%",
+                        height: "10rem",
+                        overflow: "auto",
+                      }}
+                      hoverable={false}
+                    >
+                      {item.objetoContrato}
+                    </Card.Grid>
+                    <Card.Grid style={{ width: "100%" }} hoverable={false}>
+                      Valor inicial: R${item.valorInicial}
+                    </Card.Grid>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          ))}
+        </div>
+      )}
+      {error && (
+        <div className="flex flex-shrink w-full min-h-[100vh] justify-center items-center">
+          <Alert showIcon type="error" message={error} />
+        </div>
+      )}
+      {loading && (
+        <div className="flex flex-shrink w-full min-h-[100vh] justify-center items-center">
+          <Spin size="large">
+            <p className="mt-16">Carregando...</p>
+          </Spin>
+        </div>
+      )}
     </main>
   );
 }
