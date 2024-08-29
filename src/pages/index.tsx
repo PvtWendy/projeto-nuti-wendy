@@ -87,11 +87,23 @@ export default function Home() {
     }
   };
 
+  const valorTotal = data.reduce(
+    (total: number, item: any) => total + item.valorInicial,
+    0
+  );
+
+  //Formata os valores financeiros
+  const formattedCurrency = (value: number) => {
+    return value.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
   //Faz a grid usando o Ant com um maximo de duas colunas
   const rows = [];
   for (let i = 0; i < data.length; i += 2) {
     rows.push(data.slice(i, i + 2));
-    console.log(rows);
   }
   return (
     <main className="flex overflow-hidden">
@@ -128,9 +140,9 @@ export default function Home() {
               <Card.Grid style={{ width: "50%" }} hoverable={false}>
                 Código do IBGE: {data[0].unidadeOrgao.codigoIbge}
               </Card.Grid>
-              <Card.Grid style={{ width: "60%" }} hoverable={false}>
-                Valor Total: R${data.reduce((total:number, item:any) => total + item.valorInicial, 0)}
-
+              <Card.Grid style={{ width: "100%" }} hoverable={false}>
+                Valor Total: &nbsp;
+                {formattedCurrency(valorTotal)}
               </Card.Grid>
             </Card>
           )}
@@ -166,7 +178,7 @@ export default function Home() {
                       {item.objetoContrato}
                     </Card.Grid>
                     <Card.Grid style={{ width: "100%" }} hoverable={false}>
-                      Valor inicial: R${item.valorInicial}
+                      Valor inicial: {formattedCurrency(item.valorInicial)}
                     </Card.Grid>
                   </Card>
                 </Col>
