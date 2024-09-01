@@ -55,9 +55,9 @@ export default function Home() {
 
   //Formata as datas
   function formatDate(dateString: string): string {
-    const [year, month, day] = dateString.split('-');
+    const [year, month, day] = dateString.split("-");
     return `${day}/${month}/${year}`;
-}
+  }
   //Enviar o formulário
   const clickHandler = async () => {
     //Redefine os dados
@@ -104,7 +104,6 @@ export default function Home() {
     (total: number, item: any) => total + item.valorInicial,
     0
   );
-
 
   //Faz a grid usando o Ant com um maximo de duas colunas
   const rows = [];
@@ -203,6 +202,11 @@ export default function Home() {
           <Spin size="large">
             <p className="mt-16">Carregando...</p>
           </Spin>
+        </div>
+      )}
+      {!loading && !error && data.length === 0 && (
+        <div className="flex flex-shrink w-full min-h-[100vh] justify-center items-center">
+          <p>Eu não consegui fazer com banco de dados por que meu PC decidiu que nem o MySQL nem o Mongo estão funcionando :D</p>
         </div>
       )}
     </main>
