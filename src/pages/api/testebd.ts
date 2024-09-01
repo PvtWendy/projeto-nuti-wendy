@@ -3,15 +3,18 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export default async function getContratos(req: NextApiRequest, res: NextApiResponse) {
+export default async function getContratos(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  //Faz uma busca no banco de dados
   try {
-
     const unidadeOrgaos = await prisma.unidadeOrgao.findMany({
       include: {
-        contratos: true, 
+        contratos: true,
       },
     });
-
+    //Devolve o resultado da busca
     res.status(200).json(unidadeOrgaos);
   } catch (err: any) {
     console.error(err);

@@ -131,7 +131,9 @@ export default function Home() {
           <Button onClick={clickHandler}>Buscar</Button>
         </div>
         <div>
-          {data.length > 0 && (
+          {
+          /*Renderiza os dados da unidade selecionada*/
+          data.length > 0 && (
             <Card title={data[0].unidadeOrgao.nomeUnidade}>
               <Card.Grid style={{ width: "50%" }} hoverable={false}>
                 {data[0].unidadeOrgao.ufNome}
@@ -154,61 +156,65 @@ export default function Home() {
         </div>
       </div>
 
-      {data.length > 0 && (
-        <div className="flex flex-col flex-shrink w-full h-[100vh] justify-around items-around gap-y-2 p-2 overflow-auto">
-          {rows.map((row, rowIndex) => (
-            <Row key={rowIndex} gutter={6}>
-              {row.map((item: any, index: number) => (
-                <Col span={12} key={index}>
-                  <Card
-                    title={item.nomeRazaoSocialFornecedor}
-                    style={{ height: "100%" }}
-                  >
-                    <Card.Grid style={{ width: "50%" }} hoverable={false}>
-                      Vigência inicial: &nbsp;
-                      {formatDate(item.dataVigenciaInicio)}
-                    </Card.Grid>
-                    <Card.Grid style={{ width: "50%" }} hoverable={false}>
-                      Vigência Final: &nbsp;
-                      {formatDate(item.dataVigenciaFim)}
-                    </Card.Grid>
-                    <Card.Grid
-                      style={{
-                        width: "100%",
-                        height: "10rem",
-                        overflow: "auto",
-                      }}
-                      hoverable={false}
+      {
+        /*Renderiza os dados */
+        data.length > 0 && (
+          <div className="flex flex-col flex-shrink w-full h-[100vh] justify-around items-around gap-y-2 p-2 overflow-auto">
+            {rows.map((row, rowIndex) => (
+              <Row key={rowIndex} gutter={6}>
+                {row.map((item: any, index: number) => (
+                  <Col span={12} key={index}>
+                    <Card
+                      title={item.nomeRazaoSocialFornecedor}
+                      style={{ height: "100%" }}
                     >
-                      {item.objetoContrato}
-                    </Card.Grid>
-                    <Card.Grid style={{ width: "100%" }} hoverable={false}>
-                      Valor inicial: {formattedCurrency(item.valorInicial)}
-                    </Card.Grid>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          ))}
-        </div>
-      )}
-      {error && (
-        <div className="flex flex-shrink w-full min-h-[100vh] justify-center items-center">
-          <Alert showIcon type="error" message={error} />
-        </div>
-      )}
-      {loading && (
-        <div className="flex flex-shrink w-full min-h-[100vh] justify-center items-center">
-          <Spin size="large">
-            <p className="mt-16">Carregando...</p>
-          </Spin>
-        </div>
-      )}
-      {!loading && !error && data.length === 0 && (
-        <div className="flex flex-shrink w-full min-h-[100vh] justify-center items-center">
-          <p>Eu não consegui fazer com banco de dados por que meu PC decidiu que nem o MySQL nem o Mongo estão funcionando :D</p>
-        </div>
-      )}
+                      <Card.Grid style={{ width: "50%" }} hoverable={false}>
+                        Vigência inicial: &nbsp;
+                        {formatDate(item.dataVigenciaInicio)}
+                      </Card.Grid>
+                      <Card.Grid style={{ width: "50%" }} hoverable={false}>
+                        Vigência Final: &nbsp;
+                        {formatDate(item.dataVigenciaFim)}
+                      </Card.Grid>
+                      <Card.Grid
+                        style={{
+                          width: "100%",
+                          height: "10rem",
+                          overflow: "auto",
+                        }}
+                        hoverable={false}
+                      >
+                        {item.objetoContrato}
+                      </Card.Grid>
+                      <Card.Grid style={{ width: "100%" }} hoverable={false}>
+                        Valor inicial: {formattedCurrency(item.valorInicial)}
+                      </Card.Grid>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            ))}
+          </div>
+        )
+      }
+      {
+        /*Renderiza a pagina de erro */
+        error && (
+          <div className="flex flex-shrink w-full min-h-[100vh] justify-center items-center">
+            <Alert showIcon type="error" message={error} />
+          </div>
+        )
+      }
+      {
+        /*Renderiza a pagina de carregamento */
+        loading && (
+          <div className="flex flex-shrink w-full min-h-[100vh] justify-center items-center">
+            <Spin size="large">
+              <p className="mt-16">Carregando...</p>
+            </Spin>
+          </div>
+        )
+      }
     </main>
   );
 }
